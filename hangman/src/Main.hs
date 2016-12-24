@@ -62,9 +62,10 @@ fillInCharacter (Puzzle word filledInSoFar s) c =
 data Puzzle = Puzzle String [Maybe Char] [Char]
 
 instance Show Puzzle where
-  show (Puzzle _ discovered guesses) =
+  show (Puzzle word discovered guesses) =
     (intersperse ' ' $ fmap renderPuzzleChar discovered)
     ++ " Guessed so far: " ++ guesses
+    ++ " word: " ++ word
 
 freshPuzzle :: String -> Puzzle
 freshPuzzle s =
