@@ -10,15 +10,11 @@ genSafeChar = elements $ ['a'..'z'] ++ ['A'..'Z']
 genSafeString :: Gen String
 genSafeString = listOf genSafeChar
 
-
 genTuple :: Gen (String, String)
 genTuple = do
   a <- listOf genSafeChar
   b <- listOf genSafeChar
   return (a, b)
-
---genSafeStringPair :: Gen (String, String)
---genSafeStringPair = listOf (genSafeChar, genSafeChar)
 
 main :: IO ()
 main = hspec $ do
