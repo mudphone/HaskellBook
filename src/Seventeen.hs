@@ -102,16 +102,19 @@ flatMap :: (a -> List b) -> List a -> List b
 flatMap _ Nil = Nil
 flatMap f as = concat' $ fmap f as
 
-toMyList = foldr Cons Nil
-myXs = toMyList [1,2,3]
-myC = Cons
-myFlatMap = flatMap (\x -> x `myC` (9 `myC` Nil)) myXs
-
-functions = Cons (+1) (Cons (*2) Nil)
-values = Cons 1 (Cons 2 Nil)
-
 instance Applicative List where
   pure a = Cons a Nil
   (<*>) Nil _ = Nil
   (<*>) _ Nil = Nil
   (<*>) fs as = concat' $ fmap (\f -> fmap f as) fs
+
+functions = Cons (+1) (Cons (*2) Nil)
+values = Cons 1 (Cons 2 Nil)
+
+-- λ> functions <*> values
+-- => Cons 2 (Cons 3 (Cons 2 (Cons 4 Nil)))
+
+toMyList = foldr Cons Nil
+myXs = toMyList [1,2,3]
+myC = Cons
+myFlatMap = flatMap (\x -> x `myC` (9 `myC` Nil)) myXs
