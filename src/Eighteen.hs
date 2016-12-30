@@ -241,7 +241,7 @@ a4 ma mf = mf >>= (\f -> fmap f ma)
 -- 5
 meh :: Monad m => [a] -> (a -> m b) -> m [b]
 meh [] f = return []
-meh (a:as) f = (f a) >>= (\b -> fmap (\bs -> [b] ++ bs) (meh as f))
+meh (a:as) f = (f a) >>= (\b -> fmap ([b]++) (meh as f))
 
 -- 6
 flipType :: Monad m => [m a] -> m [a]
