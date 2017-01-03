@@ -80,3 +80,9 @@ data Four' a b = Four' a b b b
 
 instance Foldable (Four' a) where
   foldMap f (Four' a b c d) = f b <> f c <> f d
+
+
+--
+filterF' :: (Applicative f, Foldable t, Monoid (f a)) => (a -> Bool) -> t a -> f a
+filterF' f = foldMap (\th -> if (f th) then (pure th) else mempty)
+-- filterF' (odd . getSum) [1,2,3 :: Sum Integer]
