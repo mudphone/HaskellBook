@@ -187,19 +187,54 @@ instance (Arbitrary (n a), Arbitrary a) => Arbitrary (S n a) where
 instance (Eq a, Eq (n a)) => EqProp (S n a) where (=-=) = eq
 
 
+-- Instances for Tree
+data Tree a =
+    Empty
+  | Leaf a
+  | Node (Tree a) a (Tree a)
+  deriving (Eq, Ord, Show)
+
+instance Functor Tree where
+  fmap _ Empty = Empty
+  fmap f (Leaf a) = Leaf (f a)
+  fmap f (Node ta a tb) = Node (f <$> ta) (f a) (f <$> tb)
+
+instance Foldable Tree where
+  foldMap _ Empty = mempty
+  foldMap f (Leaf a) = f a
+  foldMap f (Node ta a tb) = (foldMap f ta) <> (f a) <> (foldMap f tb)
+
+instance Traversable Tree where
+  traverse _ Empty = pure Empty
+  traverse f (Leaf a) = Leaf <$> f a
+  traverse f (Node ta a tb) = Node <$> (traverse f ta) <*> (f a) <*> (traverse f tb)
+
+instance Arbitrary a => Arbitrary (Tree a) where
+  arbitrary = do
+    x <- arbitrary
+    l <- arbitrary
+    r <- arbitrary
+    frequency [(1, return Empty),
+               (1, return (Leaf x)),
+               (1, return (Node l x r))]
+
+instance Eq a => EqProp (Tree a) where (=-=) = eq
+  
 main :: IO ()
 main = do
-  -- let triggerIdentity = undefined :: Identity (Int, Int, [Int])
-  -- quickBatch (traversable triggerIdentity)
-  -- let triggerConstant = undefined :: Constant (Int, Int, [Int]) (Int, Int, [Int])
-  -- quickBatch (traversable triggerConstant)
-  -- let triggerOptional = undefined :: Optional (Int, Int, [Int])
-  -- quickBatch (traversable triggerOptional)
-  -- let triggerList = undefined :: List (Int, Int, [Int])
-  -- quickBatch (traversable triggerList)
-  -- let triggerThree = undefined :: Three Int Int (Int, Int, [Int])
-  -- quickBatch (traversable triggerThree)
-  -- let triggerThree' = undefined :: Three' Int (Int, Int, [Int])
-  -- quickBatch (traversable triggerThree')
+  let triggerIdentity = undefined :: Identity (Int, Int, [Int])
+  quickBatch (traversable triggerIdentity)
+  let triggerConstant = undefined :: Constant (Int, Int, [Int]) (Int, Int, [Int])
+  quickBatch (traversable triggerConstant)
+  let triggerOptional = undefined :: Optional (Int, Int, [Int])
+  quickBatch (traversable triggerOptional)
+  let triggerList = undefined :: List (Int, Int, [Int])
+  quickBatch (traversable triggerList)
+  let triggerThree = undefined :: Three Int Int (Int, Int, [Int])
+  quickBatch (traversable triggerThree)
+  let triggerThree' = undefined :: Three' Int (Int, Int, [Int])
+  quickBatch (traversable triggerThree')
   let triggerS = undefined :: S [] (Int, String, [Int])
   quickBatch (traversable triggerS)
+  let triggerTree = undefined :: Tree (Int, Int, [Int])
+  quickBatch (traversable triggerTree)
