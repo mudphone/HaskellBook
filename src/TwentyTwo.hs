@@ -1,3 +1,5 @@
+{-# LANGUAGE InstanceSigs #-}
+
 module TwentyTwo where
 
 import Control.Applicative (liftA2)
@@ -40,6 +42,7 @@ ask = Reader id
 
 
 -- Exercise: Reading Comprehension
+-- 1
 newtype HumanName = HumanName String
   deriving (Eq, Show)
 
@@ -81,3 +84,23 @@ getDogR2 = myLiftA2 Dog dogName address
 -- λ> getDogR2 chris
 -- Dog {dogsName = DogName "Papu", dogsAddress = Address "Austin"}
               
+
+-- 2
+asks :: (r -> a) -> Reader r a
+asks f = Reader f
+
+
+-- 3
+instance Functor (Reader r) where
+  fmap :: (a -> b) -> Reader r a -> Reader r b
+  fmap f (Reader ra) = Reader $ (f . ra)
+
+instance Applicative (Reader r) where
+  pure :: a -> Reader r a
+  pure a = Reader $ (\_ -> a)
+
+  (<*>) :: Reader r (a -> b)
+        -> Reader r a
+        -> Reader r b
+  (Reader rab) <*> (Reader ra) =
+    Reader $ \r -> (rab r) (ra r)
