@@ -3,6 +3,7 @@
 module TwentyTwo where
 
 import Control.Applicative (liftA2)
+import Control.Monad (liftM2)
 import Data.Char
 
 -- Short Exercise: Warming Up
@@ -104,3 +105,42 @@ instance Applicative (Reader r) where
         -> Reader r b
   (Reader rab) <*> (Reader ra) =
     Reader $ \r -> (rab r) (ra r)
+
+
+-- Exercise: Reader Monad
+-- 1
+getDogRM :: Person -> Dog
+getDogRM = do
+  name <- dogName
+  addy <- address
+  return $ Dog name addy
+
+-- λ> getDogRM chris
+-- Dog {dogsName = DogName "Papu", dogsAddress = Address "Austin"}
+
+instance Monad (Reader r) where
+  return = pure
+
+  (>>=) :: Reader r a
+        -> (a -> Reader r b)
+        -> Reader r b
+  (Reader ra) >>= aRb =
+    Reader $ \r -> runReader (aRb $ ra r) $ r
+
+
+-- 2
+getDogRM2 :: Reader Person Dog
+getDogRM2 = Reader $ liftM2 Dog dogName address
+
+-- λ> runReader getDogRM2 $ chris
+-- Dog {dogsName = DogName "Papu", dogsAddress = Address "Austin"}
+
+getDogRM2' :: Reader Person Dog
+getDogRM2' =
+  (Reader dogName) >>=
+    \n -> (Reader address) >>=
+      \a -> return $ Dog n a 
+
+-- λ> runReader getDogRM2' $ chris
+-- Dog {dogsName = DogName "Papu", dogsAddress = Address "Austin"}
+
