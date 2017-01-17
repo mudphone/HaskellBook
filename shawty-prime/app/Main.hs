@@ -2,7 +2,8 @@
 
 module Main where
 
-import Control.Monad (replicateM)
+import Control.Monad (liftM, replicateM)
+import Control.Monad.Reader (ReaderT, ask, asks, runReaderT)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BC
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
@@ -64,7 +65,7 @@ shortyFound tbs =
 
 app :: R.Connection
     -> ScottyM ()
-app rConn = do
+app rConn = do  
   get "/" $ do
     uri <- param "uri"
     let parsedUri :: Maybe URI
@@ -88,7 +89,12 @@ app rConn = do
           where tbs :: TL.Text
                 tbs = TL.fromStrict (decodeUtf8 bs)
 
+app' :: ReaderT R.Connection IO ()
+app' = do
+  rConn <- ask
+  liftIO $ scotty 3000 (app rConn)
+
 main :: IO ()
 main = do
   rConn <- R.connect R.defaultConnectInfo
-  scotty 3000 (app rConn)
+  runReaderT app' rConn
