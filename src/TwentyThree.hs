@@ -64,3 +64,53 @@ instance Monad (Moi s) where
   (Moi f) >>= g = Moi $ \s -> let (a, s1) = f s
                                   (Moi sb) = g a
                               in sb s1
+
+-- Fizzbuzz Differently
+fizzBuzz :: Integer -> String
+fizzBuzz n | n `mod` 15 == 0 = "FizzBuzz"
+           | n `mod` 5  == 0 = "Fizz"
+           | n `mod` 3  == 0 = "Buzz"
+           | otherwise       = show n
+
+fizzbuzzList :: [Integer] -> [String]
+fizzbuzzList list = execState (mapM_ addResult list) []
+
+addResult :: Integer -> State [String] ()
+addResult n = do
+  xs <- get
+  let result = fizzBuzz n
+  put (result : xs)
+
+fizzbuzzFromTo :: Integer -> Integer -> [String]
+fizzbuzzFromTo from to =
+  let xs =  (\x -> to - x + 1) <$> [from..to]
+  in fizzbuzzList xs
+                           
+main :: IO ()
+main = do
+  mapM_ putStrLn $ reverse $ fizzbuzzList [1..10]
+  mapM_ putStrLn $ fizzbuzzFromTo 1 10
+
+
+-- 23.8 Chapter Exercises
+-- 1
+get' :: State s s
+get' = state (\x -> (x, x))
+
+-- 2
+put' :: s -> State s ()
+put' s = state $ (\_ -> ((), s))
+
+-- 3
+exec' :: State s a -> s -> s
+exec' ssa s = let sa = runState ssa
+              in snd $ sa s
+
+-- 4
+eval' :: State s a -> s -> a
+eval' ssa s = let sa = runState ssa
+              in fst $ sa s
+
+-- 5
+myModify :: (s -> s) -> State s ()
+myModify ss = state $ \s -> ((), ss s)
