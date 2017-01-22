@@ -25,6 +25,8 @@ virtuousFraction = do
     0 -> fail "Denominator cannot be zero"
     _ -> return (numerator % denominator)
 
+
+-- Exercise: Try Try
 type FracOrInt = Either Rational Integer
 
 parseFracOrInt :: Parser FracOrInt
