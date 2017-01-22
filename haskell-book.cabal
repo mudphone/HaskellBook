@@ -24,6 +24,7 @@ library
                      , checkers
                      , random
                      , transformers
+                     , trifecta
   default-language:    Haskell2010
 
 executable haskell-book-exe
