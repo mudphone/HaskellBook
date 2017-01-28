@@ -33,6 +33,5 @@ instance (Foldable f, Foldable g) =>
   
 instance (Traversable f, Traversable g) =>
          Traversable (Compose f g) where
-  traverse f (Compose fga) = sequenceA (f <$> (Compose fga))
-
 --  traverse :: Applicative f => (a -> f b) -> t a -> f (t b)
+  traverse f (Compose fga) = sequenceA (f <$> (Compose fga))
