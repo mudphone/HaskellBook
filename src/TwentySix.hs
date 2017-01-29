@@ -43,5 +43,36 @@ eitherT :: Monad m =>
 eitherT fa fb (EitherT me) = do
   v <- me
   case v of
-    Left a -> fa a
+    Left a  -> fa a
     Right b -> fb b
+
+
+-- Exercises: StateT
+newtype StateT s m a =
+  StateT { runStateT :: s -> m (a,s) }
+
+-- 1
+instance Functor m => Functor (StateT s m) where
+  -- fmap :: (a -> b) -> StateT s m a -> StateT s m b
+  fmap f (StateT sma) =
+    StateT $ (fmap . fmap) g sma
+    where g (a,s) = (f a, s)
+
+-- 2
+instance Monad m => Applicative (StateT s m) where
+  pure a = StateT (\s -> pure (a, s))
+  (StateT smfab) <*> (StateT sma) =
+    StateT $ \s -> do
+      (fab, s1) <- smfab s
+      (a, s2) <- sma s1
+      return (fab a, s2)
+
+-- 3
+instance Monad m => Monad (StateT s m) where
+  return = pure
+
+  (StateT smfab) >>= g =
+    StateT $ \s -> do
+      (a, s1) <- smfab s
+      let (StateT smb) = g a
+      smb s1
