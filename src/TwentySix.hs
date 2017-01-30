@@ -1,5 +1,7 @@
 module TwentySix where
 
+import Control.Monad (liftM)
+import Control.Monad.Trans.Class (MonadTrans, lift)
 
 -- Exercises: EitherT
 newtype EitherT e m a =
@@ -90,3 +92,15 @@ newtype ReaderT r m a =
 
 embedded :: MaybeT (ExceptT String (ReaderT () IO)) Int
 embedded = MaybeT $ ExceptT $ ReaderT $ return <$>  (const (Right (Just 1)))
+
+
+-- Exercises: Lift More
+-- 1
+instance MonadTrans (EitherT a) where
+  lift = EitherT . liftM Right
+
+-- 2
+instance MonadTrans (StateT s) where
+  lift m = StateT $ \s -> do
+    a <- m
+    return (a, s)
