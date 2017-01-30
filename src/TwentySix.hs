@@ -76,3 +76,17 @@ instance Monad m => Monad (StateT s m) where
       (a, s1) <- smfab s
       let (StateT smb) = g a
       smb s1
+
+
+-- Exercise: Wrap It Up
+newtype MaybeT m a =
+  MaybeT { runMaybeT :: m (Maybe a )}
+
+newtype ExceptT e m a =
+  ExceptT { runExceptT :: m (Either e a) }
+
+newtype ReaderT r m a =
+  ReaderT { runReaderT :: r -> m a }
+
+embedded :: MaybeT (ExceptT String (ReaderT () IO)) Int
+embedded = MaybeT $ ExceptT $ ReaderT $ return <$>  (const (Right (Just 1)))
