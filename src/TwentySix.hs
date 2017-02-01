@@ -1,6 +1,7 @@
 module TwentySix where
 
 import Control.Monad (liftM)
+import Control.Monad.IO.Class --(MonadIO, liftIO)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 
 -- Exercises: EitherT
@@ -104,3 +105,91 @@ instance MonadTrans (StateT s) where
   lift m = StateT $ \s -> do
     a <- m
     return (a, s)
+
+
+-- Exercises: Some Instances
+-- class (Monad m) => MonadIO m where
+--   liftIO :: IO a -> m a
+  
+newtype IdentityT f a =
+  IdentityT { runIdentityT :: f a }
+  deriving (Eq, Show)
+
+instance (Functor m) => Functor (IdentityT m) where
+  fmap f (IdentityT fa) = IdentityT (fmap f fa)
+
+instance (Applicative m) => Applicative (IdentityT m) where
+  pure x = IdentityT (pure x)
+  (IdentityT fab) <*> (IdentityT fa) = IdentityT (fab <*> fa)
+
+instance (Monad m) => Monad (IdentityT m) where
+  return = pure
+  (IdentityT ma) >>= f = IdentityT $ ma >>= runIdentityT . f
+
+instance (MonadIO m) => MonadIO (IdentityT m) where
+  liftIO = IdentityT . liftIO
+
+
+-- 1. MaybeT
+instance (Functor m) => Functor (MaybeT m) where
+  fmap f (MaybeT ma) = MaybeT $ (fmap . fmap) f ma
+
+instance (Applicative m) => Applicative (MaybeT m) where
+  pure x = MaybeT (pure (pure x))
+  (MaybeT fab) <*> (MaybeT mma) =
+    MaybeT $ (<*>) <$> fab <*> mma
+
+instance (Monad m) => Monad (MaybeT m) where
+  return = pure
+  -- (>>=) :: MaybeT m a
+  --       -> (a -> MaybeT m b)
+  --       -> MaybeT m b
+  (MaybeT ma) >>= f =
+    MaybeT $ do
+      v <- ma
+      case v of
+        Nothing -> return Nothing
+        Just y -> runMaybeT (f y) 
+
+instance MonadTrans MaybeT where
+  lift = MaybeT . liftM Just
+
+instance MonadIO m => MonadIO (MaybeT m) where
+-- liftIO :: IO a -> m a
+  liftIO = lift . liftIO
+
+
+-- 2. ReaderT
+instance (Functor m) => Functor (ReaderT r m) where
+  fmap f (ReaderT rma) =
+    ReaderT $ (fmap . fmap) f rma
+
+instance (Applicative m) => Applicative (ReaderT r m) where
+  pure a = ReaderT (pure (pure a))
+  (ReaderT fmab) <*> (ReaderT rma) =
+    ReaderT $ (<*>) <$> fmab <*> rma
+
+instance (Monad m) => Monad (ReaderT r m) where
+  return = pure
+-- (>>=) :: ReaderT r m a
+--       -> (a -> ReaderT r m b)
+--       -> ReaderT r m b
+  (ReaderT rma) >>= f =
+    ReaderT $ \r -> do
+      a <- rma r
+      runReaderT (f a) r
+
+instance MonadTrans (ReaderT r) where
+-- lift :: Monad m => m a -> t m a
+  lift ma =
+    ReaderT $ \r -> do
+      a <- ma
+      return a
+  
+instance MonadIO m => MonadIO (ReaderT r m) where
+  liftIO = lift . liftIO
+
+
+-- 3. StateT
+instance MonadIO m => MonadIO (StateT s m) where
+  liftIO = lift . liftIO
