@@ -1,7 +1,7 @@
 module TwentySix where
 
 import Control.Monad (liftM)
-import Control.Monad.IO.Class --(MonadIO, liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 
 -- Exercises: EitherT
@@ -193,3 +193,78 @@ instance MonadIO m => MonadIO (ReaderT r m) where
 -- 3. StateT
 instance MonadIO m => MonadIO (StateT s m) where
   liftIO = lift . liftIO
+
+
+-- Chapter Exercises
+newtype Reader r a =
+  Reader { runReader :: r -> a }
+
+instance Functor (Reader r) where
+--  fmap :: (a -> b) -> Reader r a -> Reader r b
+  fmap f (Reader ra) =
+    Reader $ \r -> f (ra r)
+
+instance Applicative (Reader r) where
+  -- pure :: a -> Reader r a
+  pure a = Reader $ (\_ -> a)
+  -- (<*>) :: Reader r (a -> b)
+  --       -> Reader r a
+  --       -> Reader r b
+  (Reader rab) <*> (Reader ra) =
+    Reader $ \r -> (rab r) (ra r)
+
+instance Monad (Reader r) where
+  return = pure
+  -- (>>=) :: Reader r a
+  --       -> (a -> Reader r b)
+  --       -> Reader r b
+  (Reader ra) >>= aRb =
+    Reader $ \r -> runReader (aRb $ ra r) $ r
+
+
+-- 1 rDec
+rDec :: Num a => Reader a a
+rDec = Reader $ \x -> x - 1
+
+
+-- 2 rDec - pointfree
+rDec' :: Num a => Reader a a
+rDec' = Reader $ subtract 1
+
+
+-- 3 rShow
+newtype Identity a =
+  Identity { runIdentity :: a }
+  deriving (Eq, Show)
+
+-- newtype ReaderT r m a =
+--   ReaderT { runReaderT :: r -> m a }
+
+rShow :: Show a => ReaderT a Identity String
+rShow = ReaderT $ \x -> Identity (show x)
+
+
+-- 4 rShow - pointfree
+rShow' :: Show a => ReaderT a Identity String
+rShow' = ReaderT $ Identity . show
+
+
+-- 5
+rPrintAndInc :: (Num a, Show a) => ReaderT a IO a
+rPrintAndInc = ReaderT $ \x -> do
+  putStrLn $ "Hi:" ++ show x
+  return $ x + 1
+
+
+-- 6
+-- newtype StateT s m a =
+--   StateT { runStateT :: s -> m (a,s) }
+
+sPrintIncAccum :: (Num a, Show a) => StateT a IO String
+sPrintIncAccum = StateT $ \x -> do
+  let str = show x
+  putStrLn $ "Hi:" ++ str
+  return (str, x + 1)
+
+
+
